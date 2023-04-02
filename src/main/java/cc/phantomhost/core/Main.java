@@ -1,9 +1,10 @@
 package cc.phantomhost.core;
 
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import cc.phantomhost.core.protocol.Protocol;
+import cc.phantomhost.core.protocol.minecraft.HandshakeData;
+import cc.phantomhost.core.protocol.minecraft.MinecraftProtocol762;
+
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -23,6 +24,13 @@ public class Main {
 
     static void accept(ServerSocket socket) throws IOException {
         Socket clientSocket = socket.accept();
-        System.out.println(clientSocket.getInetAddress());
+        InputStream in = clientSocket.getInputStream();
+        DataInputStream dataIn = new DataInputStream(in);
+        HandshakeData data = new HandshakeData(dataIn);
+        Protocol protocol = new MinecraftProtocol762(data);
+        OutputStream out = clientSocket.getOutputStream();
+        DataOutputStream dataOut = new DataOutputStream(out);
+        protocol.handleClient(dataIn,dataOut);
+        socket.close();
     }
 }

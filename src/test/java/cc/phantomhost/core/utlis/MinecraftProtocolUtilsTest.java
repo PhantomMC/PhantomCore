@@ -25,7 +25,7 @@ public class MinecraftProtocolUtilsTest {
     void readWriteStringTwice() throws IOException {
         String message1 = "Hello world!";
         String message2 = "Hello other world!";
-        ByteArrayOutputStream out = new ByteArrayOutputStream(2048);
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
         DataOutputStream dataOutputStream = new DataOutputStream(out);
         MinecraftProtocolUtils.writeString(dataOutputStream,message1);
         MinecraftProtocolUtils.writeString(dataOutputStream,message2);
@@ -35,5 +35,18 @@ public class MinecraftProtocolUtilsTest {
 
         Assertions.assertEquals(message1,MinecraftProtocolUtils.readString(dataInputStream));
         Assertions.assertEquals(message2,MinecraftProtocolUtils.readString(dataInputStream));
+    }
+
+    @Test
+    void readWriteVarInt() throws IOException{
+        int varInt = 42;
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        DataOutputStream dataOutputStream = new DataOutputStream(out);
+        MinecraftProtocolUtils.writeVarInt(dataOutputStream,varInt);
+
+        InputStream in = new ByteArrayInputStream(out.toByteArray());
+        DataInputStream dataInputStream = new DataInputStream(in);
+
+        Assertions.assertEquals(varInt,MinecraftProtocolUtils.readVarInt(dataInputStream));
     }
 }

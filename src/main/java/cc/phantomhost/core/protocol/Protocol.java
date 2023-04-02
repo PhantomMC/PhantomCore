@@ -1,8 +1,9 @@
 package cc.phantomhost.core.protocol;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 
 public interface Protocol {
-    public @Nullable String getResponse(@NotNull String message);
+    public void handleClient(DataInputStream in, DataOutputStream out) throws IOException;
 }
