@@ -35,7 +35,6 @@ public class MinecraftProtocolUtils {
                 out.writeByte(value);
                 return;
             }
-
             out.writeByte((value & SEGMENT_BITS) | CONTINUE_BIT);
 
             // Note: >>> means that the sign bit is shifted with the rest of the number rather than being left alone
@@ -94,6 +93,7 @@ public class MinecraftProtocolUtils {
 
     public static void writePacket(DataOutputStream out, ByteArrayOutputStream byteArrayOutputStream) throws IOException {
         byte[] byteArray = byteArrayOutputStream.toByteArray();
+        System.out.println(byteArray.length);
         writeVarInt(out, byteArray.length);
         out.write(byteArray);
     }

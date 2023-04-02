@@ -1,0 +1,16 @@
+{
+  "version": {
+    "name": "%WARNING_LINE%",
+    "protocol": %PROTOCOL_VERSION%
+  },
+  "players": {
+    "max": 100,
+    "online": 5,
+    "sample": [%HOVER_MESSAGE%]
+  },
+  "description": {
+    "text": "%UPPER_LINE%\n%BOTTOM_LINE%"
+  },
+  %IMAGE_DATA%
+  "enforcesSecureChat": true
+}

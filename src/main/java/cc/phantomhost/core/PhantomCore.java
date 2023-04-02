@@ -9,7 +9,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 
-public class Main {
+public class PhantomCore {
 
     public static void main(String[] args) {
         try {
@@ -28,7 +28,7 @@ public class Main {
             InputStream in = clientSocket.getInputStream();
             DataInputStream dataIn = new DataInputStream(in);
             HandshakeData data = new HandshakeData(dataIn);
-            Protocol protocol = new MinecraftProtocol762(data);
+            Protocol protocol = new MinecraftProtocol762(data,new File("favicon.png"));
             OutputStream out = clientSocket.getOutputStream();
             DataOutputStream dataOut = new DataOutputStream(out);
             protocol.handleClient(dataIn, dataOut);

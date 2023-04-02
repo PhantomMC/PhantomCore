@@ -21,9 +21,9 @@ public class MinecraftProtocol762Test {
 
     @BeforeEach
     void setUp() throws IOException {
-        PipedInputStream clientPipedInputStream = new PipedInputStream();
+        PipedInputStream clientPipedInputStream = new PipedInputStream(65536);
         PipedOutputStream serverPipedOutputStream = new PipedOutputStream(clientPipedInputStream);
-        PipedInputStream serverPipedInputStream = new PipedInputStream();
+        PipedInputStream serverPipedInputStream = new PipedInputStream(65536);
         PipedOutputStream clientPipedOutputStream = new PipedOutputStream(serverPipedInputStream);
 
         serverIn = new DataInputStream(serverPipedInputStream);
@@ -34,7 +34,7 @@ public class MinecraftProtocol762Test {
         client = new Fake762Client("test",(short)25565);
         client.writeHandshake(clientOut);
         HandshakeData initialData = new HandshakeData(serverIn);
-        protocol = new MinecraftProtocol762(initialData);
+        protocol = new MinecraftProtocol762(initialData,new File("src/test/resources/server-icon.png"));
     }
 
     @Test

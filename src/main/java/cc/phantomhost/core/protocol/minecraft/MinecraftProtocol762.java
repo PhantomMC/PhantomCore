@@ -1,20 +1,46 @@
 package cc.phantomhost.core.protocol.minecraft;
 
 import cc.phantomhost.core.protocol.Protocol;
+import cc.phantomhost.core.utils.FileUtils;
+import cc.phantomhost.core.utils.MessageCompiler;
 import cc.phantomhost.core.utils.MinecraftProtocolUtils;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.io.*;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MinecraftProtocol762 implements Protocol {
 
+    private static String LOGIN_MESSAGE_PATH = "/loginMessage.json";
+    private static String UNCOMPILED_LOGIN_MESSAGE = FileUtils.readInternalFileToString(LOGIN_MESSAGE_PATH);
+    private static String RESPONSE_MESSAGE_PATH = "/responseMessage.json";
+    private static String UNCOMPILED_RESPONSE_MESSAGE = FileUtils.readInternalFileToString(RESPONSE_MESSAGE_PATH);
+
     private final HandshakeData initialData;
 
-    public MinecraftProtocol762(HandshakeData initialData){
+    String responseMsg;
+    String loginMsg;
+    public MinecraftProtocol762(HandshakeData initialData, File imageLocation){
         this.initialData = initialData;
+        Map<DisplayData,String> displayDataMap = new HashMap<>();
+        displayDataMap.put(DisplayData.WARNING_LINE,"Waarning");
+        displayDataMap.put(DisplayData.PROTOCOL_VERSION,String.valueOf(initialData.getProtocolVersion()));
+        displayDataMap.put(DisplayData.HOVER_MESSAGE,MessageCompiler.compileHoverMessage(new String[]{"Test"}));
+        displayDataMap.put(DisplayData.UPPER_LINE,"Hello world1");
+        displayDataMap.put(DisplayData.BOTTOM_LINE,"Hello world");
+        try {
+            displayDataMap.put(DisplayData.IMAGE_DATA,MessageCompiler.compileImage(imageLocation));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        displayDataMap.put(DisplayData.LOGIN_MESSAGE,"Hello %USERNAME%!");
+
+
+        responseMsg = MessageCompiler.compileMessage(UNCOMPILED_RESPONSE_MESSAGE, displayDataMap);
+        loginMsg = MessageCompiler.compileMessage(UNCOMPILED_LOGIN_MESSAGE,displayDataMap);
+
+        System.out.println(responseMsg);
+        System.out.println(loginMsg);
     }
 
     @Override
@@ -42,7 +68,10 @@ public class MinecraftProtocol762 implements Protocol {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         DataOutputStream outputStream = new DataOutputStream(byteArrayOutputStream);
         outputStream.writeByte(0x00);
-        String msg = "{\"text\":\"Hello world!\"}";
+
+        Map<DynamicVariable,String> dynamicDataMap = new HashMap<>();
+        dynamicDataMap.put(DynamicVariable.USERNAME, username);
+        String msg = MessageCompiler.insertDynamicData(loginMsg,dynamicDataMap);
         MinecraftProtocolUtils.writeString(outputStream, msg);
         MinecraftProtocolUtils.writePacket(out,byteArrayOutputStream);
     }
@@ -80,13 +109,10 @@ public class MinecraftProtocol762 implements Protocol {
     }
 
     protected void sendStatusResponse(DataOutputStream out) throws IOException {
-        ByteArrayOutputStream dataArray = new ByteArrayOutputStream();
+        ByteArrayOutputStream dataArray = new ByteArrayOutputStream(32000);
         DataOutputStream data = new DataOutputStream(dataArray);
-        String msg = "{\"version\":{\"name\":\"1.19.3\",\"protocol\":761},\"players\":{\"max\":100,\"online\":5,\"sample\":[{\"name\":\"thinkofdeath\",\"id\":\"4566e69f-c907-48ee-8d71-d7ba5aa00d20\"}]},\"description\":{\"text\":\"Hello world\"},\"enforcesSecureChat\":true}";
         data.writeByte(0x00);
-        MinecraftProtocolUtils.writeString(data, msg);
-        byte [] byteArray = dataArray.toByteArray();
-        MinecraftProtocolUtils.writeVarInt(out,byteArray.length);
-        out.write(byteArray);
+        MinecraftProtocolUtils.writeString(data, responseMsg);
+        MinecraftProtocolUtils.writePacket(out,dataArray);
     }
 }
