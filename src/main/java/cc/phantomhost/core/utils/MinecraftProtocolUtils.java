@@ -1,5 +1,6 @@
 package cc.phantomhost.core.utils;
 
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -89,5 +90,11 @@ public class MinecraftProtocolUtils {
     public static byte[] readFully(DataInputStream in) throws IOException {
         int length = readVarInt(in);
         return in.readNBytes(length);
+    }
+
+    public static void writePacket(DataOutputStream out, ByteArrayOutputStream byteArrayOutputStream) throws IOException {
+        byte[] byteArray = byteArrayOutputStream.toByteArray();
+        writeVarInt(out, byteArray.length);
+        out.write(byteArray);
     }
 }

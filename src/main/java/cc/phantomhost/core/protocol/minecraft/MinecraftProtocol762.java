@@ -31,12 +31,20 @@ public class MinecraftProtocol762 implements Protocol {
                 return;
             default:
                 System.out.println("Got an invalid state:");
-                System.out.println(initialData.getState());
         }
     }
 
-    protected void handleLoginConnection(DataInputStream in, DataOutputStream out) {
+    protected void handleLoginConnection(DataInputStream in, DataOutputStream out) throws IOException {
+        int packetLength = MinecraftProtocolUtils.readVarInt(in);
+        int packetId = in.readByte();
+        String username = MinecraftProtocolUtils.readString(in);
 
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        DataOutputStream outputStream = new DataOutputStream(byteArrayOutputStream);
+        outputStream.writeByte(0x00);
+        String msg = "{\"text\":\"Hello world!\"}";
+        MinecraftProtocolUtils.writeString(outputStream, msg);
+        MinecraftProtocolUtils.writePacket(out,byteArrayOutputStream);
     }
 
     protected void handleStatusConnection(DataInputStream in, DataOutputStream out) throws IOException {
@@ -74,7 +82,7 @@ public class MinecraftProtocol762 implements Protocol {
     protected void sendStatusResponse(DataOutputStream out) throws IOException {
         ByteArrayOutputStream dataArray = new ByteArrayOutputStream();
         DataOutputStream data = new DataOutputStream(dataArray);
-        String msg = "{'version':{'name':'1.19.3','protocol':761},'players':{'max':100,'online':5,'sample':[]},'description':{'text':'Hello world'},'enforcesSecureChat':true}";
+        String msg = "{\"version\":{\"name\":\"1.19.3\",\"protocol\":761},\"players\":{\"max\":100,\"online\":5,\"sample\":[{\"name\":\"thinkofdeath\",\"id\":\"4566e69f-c907-48ee-8d71-d7ba5aa00d20\"}]},\"description\":{\"text\":\"Hello world\"},\"enforcesSecureChat\":true}";
         data.writeByte(0x00);
         MinecraftProtocolUtils.writeString(data, msg);
         byte [] byteArray = dataArray.toByteArray();

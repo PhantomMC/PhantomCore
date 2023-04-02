@@ -30,9 +30,7 @@ public class Fake762Client {
         MinecraftProtocolUtils.writeString(dataOutputStream, domainName);
         dataOutputStream.writeShort(port);
         MinecraftProtocolUtils.writeVarInt(dataOutputStream,1); // state (1 for handshake)
-        byte[] byteArray = byteArrayOutputStream.toByteArray();
-        MinecraftProtocolUtils.writeVarInt(out,byteArray.length);
-        out.write(byteArray);
+        MinecraftProtocolUtils.writePacket(out,byteArrayOutputStream);
     }
 
     public void writeStatusRequest(DataOutputStream out) throws IOException {
