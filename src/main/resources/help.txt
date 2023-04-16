@@ -1,0 +1,30 @@
+<!-- System / Control Commands-->
+restart
+status
+uptime
+version
+help
+
+<!-- Admin Commands -->
+touch <instance_id> <!-- Checks if an instance of that name exists -- if it does, display output of info. If it doesn't, create it with the defaults -->
+info <instance_id> <!-- Displays general overview of that instnace -->
+stats <instance_id> [stat_name] <!-- Display stats for instance. Optionally, show specific stat if specified in command -->
+transfer <instance_id> <user_id> <!-- Take an instance from one user, give to another-->
+suspend <instance_id> [reason] <!-- Prevent an instance from broadcasting. Alternatively, switch instance's to some sort of "suspended" screen showcasing the reason specified.-->
+remove <instance_id> <!-- deletes the instance-->
+toggle <instance_id> <premium | system> <!-- Changes meta on what the system can do-->
+ratelimit <instance_id> <value> <!-- Slow down problematic instances-->
+reset <instance_id> <!-- sets the instance in question to the default values, clearing any user-supplied data>
+
+<!-- Alias Commands -->
+alias <instance_id> add <alias_domain> [force_verify] <!-- adds an alias, optionally skipping the dns verification challenge required.-->
+alias <instance_id> remove <alias_domain>
+alias <instance_id> clear
+alias <instance_id> reassign <instance_id> <!-- reassign the alias to another instance (with a different id)
+
+<!-- Set Commands -->
+set <instance_id> motd <java | above | beside | bedrock> [animated_line_number] <value> <!-- animated_line_number can also be $rate$ or something, indicating the speed of that animation in ms-->
+set <instance_id> icon <icon_path>
+set <instance_id> style <style_id> <!-- 1, 2, or 3-->
+set <instance_id> hover-msg <value>
+set <instance_id> kick-msg <value>

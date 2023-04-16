@@ -1,6 +1,9 @@
 package cc.phantomhost.core.protocol.minecraft;
 
+import cc.phantomhost.core.FileName;
 import cc.phantomhost.core.protocol.Protocol;
+import cc.phantomhost.core.protocol.setting.Configuration;
+import cc.phantomhost.core.protocol.setting.Setting;
 import cc.phantomhost.core.utils.FileUtils;
 import cc.phantomhost.core.utils.MessageCompiler;
 import cc.phantomhost.core.utils.MinecraftProtocolUtils;
@@ -8,39 +11,49 @@ import cc.phantomhost.core.utils.MinecraftProtocolUtils;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class MinecraftProtocol762 implements Protocol {
 
-    private static String LOGIN_MESSAGE_PATH = "/loginMessage.json";
-    private static String UNCOMPILED_LOGIN_MESSAGE = FileUtils.readInternalFileToString(LOGIN_MESSAGE_PATH);
-    private static String RESPONSE_MESSAGE_PATH = "/responseMessage.json";
-    private static String UNCOMPILED_RESPONSE_MESSAGE = FileUtils.readInternalFileToString(RESPONSE_MESSAGE_PATH);
+    private static String UNCOMPILED_LOGIN_MESSAGE = FileUtils.readInternalFileToString(FileName.LOGIN_MESSAGE);
+    private static String UNCOMPILED_RESPONSE_MESSAGE = FileUtils.readInternalFileToString(FileName.RESPONSE_MESSAGE);
 
     private final HandshakeData initialData;
+    private final Logger logger;
+    private final Configuration config;
 
     String responseMsg;
     String loginMsg;
-    public MinecraftProtocol762(HandshakeData initialData, File imageLocation){
+
+    public MinecraftProtocol762(HandshakeData initialData, Configuration config, Logger logger){
         this.initialData = initialData;
+        this.logger = logger;
+        this.config = config;
         Map<DisplayData,String> displayDataMap = new HashMap<>();
-        displayDataMap.put(DisplayData.WARNING_LINE,"Waarning");
-        displayDataMap.put(DisplayData.PROTOCOL_VERSION,String.valueOf(initialData.getProtocolVersion()));
-        displayDataMap.put(DisplayData.HOVER_MESSAGE,MessageCompiler.compileHoverMessage(new String[]{"Test"}));
-        displayDataMap.put(DisplayData.UPPER_LINE,"Hello world1");
-        displayDataMap.put(DisplayData.BOTTOM_LINE,"Hello world");
+        displayDataMap.put(DisplayData.WARNING_LINE,config.getSetting(Setting.WARNING_LINE));
+        displayDataMap.put(DisplayData.PROTOCOL_VERSION,String.valueOf(getResponseProtocolVersion(initialData.getProtocolVersion(),config)));
+        displayDataMap.put(DisplayData.HOVER_MESSAGE,MessageCompiler.compileHoverMessage(config.getSetting(Setting.HOVER_MESSAGE)));
+        displayDataMap.put(DisplayData.MOTD,config.getSetting(Setting.MOTD));
         try {
-            displayDataMap.put(DisplayData.IMAGE_DATA,MessageCompiler.compileImage(imageLocation));
+            displayDataMap.put(DisplayData.IMAGE_DATA,MessageCompiler.compileImage(config.getSetting(Setting.IMAGE_LOCATION)));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        displayDataMap.put(DisplayData.LOGIN_MESSAGE,"Hello %USERNAME%!");
+        displayDataMap.put(DisplayData.LOGIN_MESSAGE,config.getSetting(Setting.LOGIN_MESSAGE));
 
 
         responseMsg = MessageCompiler.compileMessage(UNCOMPILED_RESPONSE_MESSAGE, displayDataMap);
-        loginMsg = MessageCompiler.compileMessage(UNCOMPILED_LOGIN_MESSAGE,displayDataMap);
+        loginMsg = MessageCompiler.compileMessage(UNCOMPILED_LOGIN_MESSAGE, displayDataMap);
+    }
 
-        System.out.println(responseMsg);
-        System.out.println(loginMsg);
+    private int getResponseProtocolVersion(int clientProtocolVersion, Configuration config) {
+        return switch (Integer.parseInt(config.getSetting(Setting.PROTOCOL_VERSION_RESPONSE))) {
+            case 1 -> clientProtocolVersion;
+            case 2 -> clientProtocolVersion + 1;
+            case 3 -> clientProtocolVersion - 1;
+            default -> throw new RuntimeException("Hypothetically unreachable code reached");
+        };
     }
 
     @Override
@@ -49,14 +62,9 @@ public class MinecraftProtocol762 implements Protocol {
             return;
         }
         switch (initialData.getState()) {
-            case 1:
-                handleStatusConnection(in, out);
-                return;
-            case 2:
-                handleLoginConnection(in, out);
-                return;
-            default:
-                System.out.println("Got an invalid state:");
+            case 1 -> handleStatusConnection(in, out);
+            case 2 -> handleLoginConnection(in, out);
+            default -> logger.log(Level.INFO, ("Got an invalid state:"));
         }
     }
 
@@ -80,7 +88,7 @@ public class MinecraftProtocol762 implements Protocol {
         while(true){
             int packetLength = MinecraftProtocolUtils.readVarInt(in);
             if(packetLength == 0){
-                System.out.println("Connection aborted");
+                logger.log(Level.FINEST,"Connection aborted");
                 return;
             }
             int packetId = in.read();

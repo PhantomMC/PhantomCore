@@ -1,10 +1,15 @@
 package cc.phantomhost.core.protocol.minecraft;
 
+import cc.phantomhost.core.PhantomCore;
+import cc.phantomhost.core.protocol.setting.Configuration;
+import cc.phantomhost.core.utils.ConfigFactory;
+import cc.phantomhost.core.utils.MinecraftProtocolUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.*;
+import java.util.logging.Logger;
 
 public class MinecraftProtocol762Test {
 
@@ -34,7 +39,8 @@ public class MinecraftProtocol762Test {
         client = new Fake762Client("test",(short)25565);
         client.writeHandshake(clientOut);
         HandshakeData initialData = new HandshakeData(serverIn);
-        protocol = new MinecraftProtocol762(initialData,new File("src/test/resources/server-icon.png"));
+        Configuration config = ConfigFactory.loadConfigurationFromFile(new File("src/test/resources/testConfig.properties"));
+        protocol = new MinecraftProtocol762(initialData,config, Logger.getLogger(PhantomCore.class.getName()));
     }
 
     @Test
@@ -43,6 +49,7 @@ public class MinecraftProtocol762Test {
         client.writeExit(clientOut);
         protocol.handleClient(serverIn,serverOut);
         client.readStatusRequest(clientIn);
+        assertEmptyStreams();
     }
 
     @Test
@@ -51,14 +58,29 @@ public class MinecraftProtocol762Test {
         client.writePing(clientOut, time);
         protocol.handleClient(serverIn,serverOut);
         Assertions.assertEquals(time, client.getPongResponse(clientIn));
+        assertEmptyStreams();
+    }
+
+    @Test
+    void pongTest2() throws IOException {
+        client.writeStatusRequest(clientOut);
+        long time = System.currentTimeMillis();
+        client.writePing(clientOut,time);
+        protocol.handleClient(serverIn,serverOut);
+        client.readStatusRequest(clientIn);
+        Assertions.assertEquals(time, client.getPongResponse(clientIn));
+        assertEmptyStreams();
     }
 
     @Test
     void abortedTest() throws IOException {
         client.writeExit(clientOut);
         protocol.handleClient(serverIn,serverOut);
+        assertEmptyStreams();
+    }
 
-        Assertions.assertTrue(clientIn.available() == 0);
-        Assertions.assertTrue(serverIn.available() == 0);
+    void assertEmptyStreams() throws IOException {
+        Assertions.assertEquals(0, clientIn.available());
+        Assertions.assertEquals(0, serverIn.available());
     }
 }

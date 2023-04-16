@@ -15,7 +15,7 @@ public class MessageCompiler {
         for(DisplayData key : insertionData.keySet() ){
             uncompiledMessage = uncompiledMessage.replaceAll("%" + key + "%", insertionData.get(key));
         }
-        return uncompiledMessage;
+        return modifyColorSymbols(uncompiledMessage);
     }
 
     public static String insertDynamicData(String uncompiledMessage, Map<DynamicVariable,String> dynamicData){
@@ -23,22 +23,31 @@ public class MessageCompiler {
             // TODO make this work with more dynamic things and stuff
             uncompiledMessage = uncompiledMessage.replaceAll("%" + key + "%",dynamicData.get(key));
         }
-        return uncompiledMessage;
+        return modifyColorSymbols(uncompiledMessage);
     }
 
-    public static String compileHoverMessage(String[] lines){
+    public static String compileHoverMessage(String lines){
         StringBuilder builder = new StringBuilder();
-        for(String line : lines){
+        for(String line : lines.split("\n")){
             String uuid = uuids[uuidCounter];
-            builder.append(String.format("{\"name\":\"%s\",\"id\":\"%s\"}",line,uuid));
+            builder.append(modifyColorSymbols(String.format("{\"name\":\"%s\",\"id\":\"%s\"},",line,uuid)));
         }
-        return builder.toString();
+        return builder.substring(0,builder.length()-1);
     }
 
-    public static String compileImage(File imageFile) throws IOException {
-        FileInputStream in = new FileInputStream(imageFile);
-        byte[] fileContent = in.readAllBytes();
-        String image = Base64.getEncoder().encodeToString(fileContent);
-        return "\"favicon\":\"data:image/png;base64,<data>\",".replaceAll("<data>",image);
+    public static String compileImage(String imageLocation) throws IOException {
+        if(imageLocation == null || imageLocation.isEmpty()){
+            return "";
+        }
+        File imageFile = new File(imageLocation);
+        try( FileInputStream in = new FileInputStream(imageFile)) {
+            byte[] fileContent = in.readAllBytes();
+            String image = Base64.getEncoder().encodeToString(fileContent);
+            return "\"favicon\":\"data:image/png;base64,<data>\",".replaceAll("<data>",image);
+        }
+    }
+
+    public static String modifyColorSymbols(String aString){
+        return aString.replaceAll("&","§");
     }
 }

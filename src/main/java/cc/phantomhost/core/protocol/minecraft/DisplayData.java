@@ -13,10 +13,7 @@ public enum DisplayData {
      * In this case, each line has to accompany an uuid
      */
     HOVER_MESSAGE,
-
-    UPPER_LINE,
-
-    BOTTOM_LINE,
+    MOTD,
 
     /**
      * Image in base64 format, note that this key is optional;

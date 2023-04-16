@@ -1,0 +1,12 @@
+type: 1
+warning: Warning line
+hover: -|
+  Hover message.
+  This can be multiple lines
+motd: -|
+  upper line in motd
+  lower line in motd2
+login: -|
+  Login message.
+  This can be multiple lines
+imageLocation: favicon.png

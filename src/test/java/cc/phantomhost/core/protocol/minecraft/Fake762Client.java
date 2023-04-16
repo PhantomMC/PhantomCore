@@ -69,13 +69,12 @@ public class Fake762Client {
 
     public long getPongResponse(DataInputStream clientIn) throws IOException {
         int packetLength = MinecraftProtocolUtils.readVarInt(clientIn);
-        System.out.println(packetLength);
         int id = MinecraftProtocolUtils.readVarInt(clientIn);
         if (id == -1) {
             throw new IOException("Premature end of stream.");
         }
         if (id != 0x01) {
-            throw new IOException("Invalid packetID");
+            throw new IOException(String.format("Invalid packetID '%s'", id));
         }
         return clientIn.readLong();
     }
