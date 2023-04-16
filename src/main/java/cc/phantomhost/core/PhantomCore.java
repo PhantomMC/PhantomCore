@@ -14,39 +14,41 @@ import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
+import org.jline.console.ConsoleEngine;
+import org.jline.reader.LineReader;
+import org.jline.reader.LineReaderBuilder;
+
 public class PhantomCore{
     public PhantomServer server;
     public Configuration defaultConfig;
-    public PhantomCredentials credentials;
-    public static final Logger logger = createLogger();
+    public final PhantomCredentials credentials;
+    public final Logger logger;
 
-    public static void main(String[] args) {
-        try{
-            PhantomCore core = new PhantomCore();
-            core.run();
-        } catch (Exception e) {
-            logger.log(Level.SEVERE,"An exception was thrown",e);
+    public PhantomCore(String[] args, Logger logger) {
+        this.logger = logger;
+        credentials = new PhantomCredentials(new File(FileName.CREDENTIALS.getFileName()));
+        try {
+            defaultConfig = ConfigFactory.loadConfigurationFromFile(new File(FileName.DEFAULT_CONFIG_FILE.getFileName()));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
-    private void run() throws IOException {
+    public void run() throws IOException {
         generateDefaultConfig();
-        credentials = new PhantomCredentials(new File(FileName.CREDENTIALS.getFileName()));
         logger.log(Level.INFO,FileUtils.readInternalFileToString(FileName.VERSION));
 
-        defaultConfig = ConfigFactory.loadConfigurationFromFile(new File(FileName.DEFAULT_CONFIG_FILE.getFileName()));
         server = new PhantomServer(defaultConfig,logger);
         server.start();
         listenForCommands();
     }
 
     private void listenForCommands() throws IOException {
+        LineReader reader = LineReaderBuilder.builder().build();
         try {
             while (true) {
                 try {
-                    BufferedReader reader = new BufferedReader(
-                            new InputStreamReader(System.in));
-                    PhantomCommand command = CommandFactory.createCommand(reader.readLine());
+                    PhantomCommand command = CommandFactory.createCommand(reader.readLine(""));
                     command.run(this);
                 } catch (IllegalArgumentException e) {
                     logger.log(Level.INFO, e.getMessage());
@@ -69,14 +71,6 @@ public class PhantomCore{
             try (OutputStream outputStream = new FileOutputStream(configFile)) {
                 inputStream.transferTo(outputStream);
             }
-        }
-    }
-    private static Logger createLogger(){
-        try(InputStream inputStream = PhantomCore.class.getResourceAsStream("/" + FileName.LOGGING_SETTINGS.getFileName())){
-            LogManager.getLogManager().readConfiguration(inputStream);
-            return Logger.getLogger(PhantomCore.class.getName());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
     }
 }
