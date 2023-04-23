@@ -2,8 +2,7 @@ package cc.phantomhost.core.protocol.minecraft;
 
 import cc.phantomhost.core.FileName;
 import cc.phantomhost.core.protocol.Protocol;
-import cc.phantomhost.core.protocol.setting.Configuration;
-import cc.phantomhost.core.protocol.setting.Setting;
+import cc.phantomhost.core.config.Setting;
 import cc.phantomhost.core.utils.FileUtils;
 import cc.phantomhost.core.utils.MessageCompiler;
 import cc.phantomhost.core.utils.MinecraftProtocolUtils;
@@ -21,34 +20,34 @@ public class MinecraftProtocol762 implements Protocol {
 
     private final HandshakeData initialData;
     private final Logger logger;
-    private final Configuration config;
+    private final Map<Setting,String> config;
 
     String responseMsg;
     String loginMsg;
 
-    public MinecraftProtocol762(HandshakeData initialData, Configuration config, Logger logger){
+    public MinecraftProtocol762(HandshakeData initialData, Map<Setting,String> config, Logger logger){
         this.initialData = initialData;
         this.logger = logger;
         this.config = config;
         Map<DisplayData,String> displayDataMap = new HashMap<>();
-        displayDataMap.put(DisplayData.WARNING_LINE,config.getSetting(Setting.WARNING_LINE));
+        displayDataMap.put(DisplayData.WARNING_LINE,config.get(Setting.WARNING_LINE));
         displayDataMap.put(DisplayData.PROTOCOL_VERSION,String.valueOf(getResponseProtocolVersion(initialData.getProtocolVersion(),config)));
-        displayDataMap.put(DisplayData.HOVER_MESSAGE,MessageCompiler.compileHoverMessage(config.getSetting(Setting.HOVER_MESSAGE)));
-        displayDataMap.put(DisplayData.MOTD,config.getSetting(Setting.MOTD));
+        displayDataMap.put(DisplayData.HOVER_MESSAGE,MessageCompiler.compileHoverMessage(config.get(Setting.HOVER_MESSAGE)));
+        displayDataMap.put(DisplayData.MOTD,config.get(Setting.MOTD));
         try {
-            displayDataMap.put(DisplayData.IMAGE_DATA,MessageCompiler.compileImage(config.getSetting(Setting.IMAGE_LOCATION)));
+            displayDataMap.put(DisplayData.IMAGE_DATA,MessageCompiler.compileImage(config.get(Setting.IMAGE_LOCATION)));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        displayDataMap.put(DisplayData.LOGIN_MESSAGE,config.getSetting(Setting.LOGIN_MESSAGE));
+        displayDataMap.put(DisplayData.LOGIN_MESSAGE,config.get(Setting.LOGIN_MESSAGE));
 
 
         responseMsg = MessageCompiler.compileMessage(UNCOMPILED_RESPONSE_MESSAGE, displayDataMap);
         loginMsg = MessageCompiler.compileMessage(UNCOMPILED_LOGIN_MESSAGE, displayDataMap);
     }
 
-    private int getResponseProtocolVersion(int clientProtocolVersion, Configuration config) {
-        return switch (Integer.parseInt(config.getSetting(Setting.PROTOCOL_VERSION_RESPONSE))) {
+    private int getResponseProtocolVersion(int clientProtocolVersion, Map<Setting,String> config) {
+        return switch (Integer.parseInt(config.get(Setting.PROTOCOL_VERSION_RESPONSE))) {
             case 1 -> clientProtocolVersion;
             case 2 -> clientProtocolVersion + 1;
             case 3 -> clientProtocolVersion - 1;
@@ -59,7 +58,7 @@ public class MinecraftProtocol762 implements Protocol {
     @Override
     public void handleClient(DataInputStream in, DataOutputStream out) throws IOException {
         if(initialData.getPacketId() != 0){
-            return;
+            throw new IOException(String.format("Invalid packet id '%d'",initialData.getPacketId()));
         }
         switch (initialData.getState()) {
             case 1 -> handleStatusConnection(in, out);

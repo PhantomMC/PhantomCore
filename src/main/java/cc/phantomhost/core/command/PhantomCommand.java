@@ -6,6 +6,6 @@ import java.io.IOException;
 
 public interface PhantomCommand {
 
-    void run(PhantomCore instance) throws InterruptedException, IOException;
+    void run() throws InterruptedException, IOException;
 
 }

@@ -1,25 +1,36 @@
 package cc.phantomhost.core.utils;
 
-import cc.phantomhost.core.protocol.setting.Configuration;
-import cc.phantomhost.core.protocol.setting.PropertiesConfiguration;
-import cc.phantomhost.core.protocol.setting.YamlConfiguration;
+import cc.phantomhost.core.config.*;
 
 import java.io.*;
+import java.util.Map;
 
 public class ConfigFactory {
 
     public static Configuration loadConfigurationFromFile(File file) throws IOException {
+        Configuration configuration = getDefaultConfiguration();
         String fileName = file.getName();
+
+        ConfigurationIO configurationIO;
         if(fileName.endsWith(".properties")){
-            try(InputStream inputStream = new FileInputStream(file)) {
-                return new PropertiesConfiguration(inputStream);
-            }
+            configurationIO = new PropertiesConfigurationIO(file);
         }
-        if(fileName.endsWith(".yaml") || fileName.endsWith(".yml")){
+        else if(fileName.endsWith(".yaml") || fileName.endsWith(".yml")){
             try(InputStream inputStream = new FileInputStream(file)) {
-                return new YamlConfiguration(inputStream);
+                configurationIO = new YamlConfigurationIO(file);
             }
+        } else {
+            throw new IOException("Invalid filename");
         }
-        throw new IOException("Invalid filename");
+        configurationIO.loadConfiguration(configuration);
+        return configuration;
+    }
+
+    public static Configuration getDefaultConfiguration(){
+        Configuration configuration = new Configuration();
+        for(Setting setting : Setting.values()){
+            configuration.put(setting,setting.getDefaultValue());
+        }
+        return configuration;
     }
 }

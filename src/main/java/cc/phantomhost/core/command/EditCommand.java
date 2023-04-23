@@ -1,35 +1,41 @@
 package cc.phantomhost.core.command;
 
 import cc.phantomhost.core.PhantomCore;
-import cc.phantomhost.core.protocol.setting.Configuration;
-import cc.phantomhost.core.protocol.setting.MongoDBConfiguration;
-import cc.phantomhost.core.protocol.setting.Setting;
+import cc.phantomhost.core.config.MongoDBConfigurationIO;
+import cc.phantomhost.core.config.Setting;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 
 public class EditCommand implements PhantomCommand{
 
     private final String[] command;
+    private final PhantomCore instance;
 
-    public EditCommand(String[] command){
+    public EditCommand(String[] command,PhantomCore instance){
         this.command = command;
+        this.instance = instance;
     }
     @Override
-    public void run(PhantomCore instance) throws IOException {
+    public void run() throws IOException {
         if(command.length < 3){
-            instance.logger.log(Level.INFO, "Command lacks input arguments");
+            instance.logger.log(Level.INFO, "Command requires 4 or 5 arguments");
         }
-        Configuration configuration;
+        Map<Setting,String> configuration;
         int settingKeyPosition;
         if(command.length < 4){
             settingKeyPosition = 1;
             configuration = instance.defaultConfig;
         } else {
             settingKeyPosition = 2;
-            configuration = new MongoDBConfiguration(instance.credentials, command[1]);
+            configuration = new HashMap<>();
+            MongoDBConfigurationIO mongodbIO = new MongoDBConfigurationIO(instance.credentials, command[1]);
+            mongodbIO.loadConfiguration(configuration);
         }
         Setting setting = Setting.getFromKey(command[settingKeyPosition]);
-        configuration.setSetting(setting,command[settingKeyPosition+1]);
+        String key = command[settingKeyPosition+1];
+        configuration.put(setting,key);
     }
 }

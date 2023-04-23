@@ -10,8 +10,14 @@ import java.io.IOException;
 import java.util.logging.Level;
 
 public class RestartCommand implements PhantomCommand{
+
+    private final PhantomCore instance;
+
+    public RestartCommand(PhantomCore instance){
+        this.instance = instance;
+    }
     @Override
-    public void run(PhantomCore instance) throws IOException {
+    public void run() throws IOException {
         instance.defaultConfig = ConfigFactory.loadConfigurationFromFile(new File(FileName.DEFAULT_CONFIG_FILE.getFileName()));
         instance.server.interrupt();
         instance.server = new PhantomServer(instance.defaultConfig,instance.logger);

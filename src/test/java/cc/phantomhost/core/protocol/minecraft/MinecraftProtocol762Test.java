@@ -1,14 +1,14 @@
 package cc.phantomhost.core.protocol.minecraft;
 
 import cc.phantomhost.core.PhantomCore;
-import cc.phantomhost.core.protocol.setting.Configuration;
+import cc.phantomhost.core.config.Setting;
 import cc.phantomhost.core.utils.ConfigFactory;
-import cc.phantomhost.core.utils.MinecraftProtocolUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.*;
+import java.util.Map;
 import java.util.logging.Logger;
 
 public class MinecraftProtocol762Test {
@@ -39,7 +39,7 @@ public class MinecraftProtocol762Test {
         client = new Fake762Client("test",(short)25565);
         client.writeHandshake(clientOut);
         HandshakeData initialData = new HandshakeData(serverIn);
-        Configuration config = ConfigFactory.loadConfigurationFromFile(new File("src/test/resources/testConfig.properties"));
+        Map<Setting,String> config = ConfigFactory.loadConfigurationFromFile(new File("src/test/resources/testConfig.properties"));
         protocol = new MinecraftProtocol762(initialData,config, Logger.getLogger(PhantomCore.class.getName()));
     }
 
